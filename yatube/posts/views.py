@@ -31,16 +31,18 @@ def profile(request, username, following=False):
     author = get_object_or_404(User, username=username)
     posts = Post.objects.filter(author=author)
     template = 'posts/profile.html'
-    #разве if не предотвращает повторный запрос к БД?
-    if request.user.is_authenticated:
+    following_button = False
+    if request.user.is_authenticated and request.user != author:
         following = Follow.objects.filter(
             author=author,
             user=request.user
         ).exists()
+        following_button = True
     context = {
         'page_obj': paginator_def(request, posts),
         'author': author,
-        'following': following}
+        'following': following,
+        'following_button': following_button}
     return render(request, template, context)
 
 
@@ -128,11 +130,10 @@ def follow_index(request):
 @login_required
 def profile_follow(request, username):
     author = get_object_or_404(User, username=username)
-    if Follow.follow_can_be_created(request.user, author):
+    if request.user != author:
         Follow.objects.create(
-            user=request.user,
-            author=author
-        )
+                user=request.user,
+                author=author)
     return redirect('posts:profile', username)
 
 

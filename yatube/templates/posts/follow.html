@@ -8,7 +8,9 @@
   {% for post in page_obj %}
     <article>
       <ul>
-       <li>Автор: {{ post.author.username }}</li>
+        <li>
+          Автор: {% if post.author.get_full_name %}{{ post.author.get_full_name }}{% else %}{{ post.author }}{% endif %} <a href="{% url 'posts:profile' post.author %}">все посты пользователя</a>
+        </li>
         <li>Дата публикации: {{ post.created|date:'d F Y' }}</li>
       </ul>
       {% thumbnail post.image "960x339" crop="center" upscale=True as im %}
