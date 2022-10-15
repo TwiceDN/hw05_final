@@ -1,18 +1,17 @@
-from django.contrib.auth import get_user_model
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Post, Group, Comment, Follow
-from .forms import PostForm, CommentForm
-from .utils import paginator_def
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_page
+from django.conf import settings
 
-User = get_user_model()
+from .models import Post, Group, Comment, Follow, User
+from .forms import PostForm, CommentForm
+from .utils import paginator_def
 
 
 @cache_page(20)
 def index(request):
-    posts = Post.objects.all().order_by('-pub_date')
+    posts = Post.objects.all()
     # Отдаем в словаре контекста
     context = {
         'page_obj': paginator_def(request, posts),
@@ -32,6 +31,7 @@ def profile(request, username, following=False):
     author = get_object_or_404(User, username=username)
     posts = Post.objects.filter(author=author)
     template = 'posts/profile.html'
+    #разве if не предотвращает повторный запрос к БД?
     if request.user.is_authenticated:
         following = Follow.objects.filter(
             author=author,
@@ -46,7 +46,7 @@ def profile(request, username, following=False):
 
 def post_detail(request, post_id):
     post = get_object_or_404(Post, id=post_id)
-    title = str(post.text)[:30]
+    title = str(post.text)[:settings.LIMIT_TEXT]
     number_of_posts = Post.objects.filter(author=post.author).count()
     form = CommentForm()
     comments = Comment.objects.filter(post=post)
@@ -115,7 +115,7 @@ def follow_index(request):
     template = 'posts/follow.html'
     title = 'Все посты ваших подписок'
     posts = Post.objects.filter(author__following__user=request.user)
-    paginator = Paginator(posts, 10)
+    paginator = Paginator(posts, settings.NUMBER_POST)
     page_number = request.GET.get('page_obj')
     page_obj = paginator.get_page(page_number)
     context = {

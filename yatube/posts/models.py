@@ -1,6 +1,7 @@
-from django.db import models
 from django.contrib.auth import get_user_model
-
+from django.db import models
+from django.db.models import F, Q
+from django.db.models import CheckConstraint, UniqueConstraint
 
 User = get_user_model()
 
@@ -9,6 +10,10 @@ class Group(models.Model):
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
     description = models.TextField()
+
+    class Meta:
+        verbose_name = 'Группа'
+        verbose_name_plural = "Группы"
 
     def __str__(self) -> str:
         return self.title
@@ -40,12 +45,15 @@ class Post(models.Model):
 
     class Meta:
         ordering = ("-pub_date",)
+        verbose_name = 'Текст поста'
+        verbose_name_plural = "Текст постов"
 
     def __str__(self) -> str:
         return self.text
 
 
 class Comment(models.Model):
+    pub_date = models.DateTimeField(auto_now_add=True, db_index=True)
     post = models.ForeignKey(
         Post,
         on_delete=models.CASCADE,
@@ -64,8 +72,14 @@ class Comment(models.Model):
     )
     created = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['-pub_date']
+        verbose_name = 'Комментарий'
+        verbose_name_plural = "Комментарии"
+
 
 class Follow(models.Model):
+    pub_date = models.DateTimeField(auto_now_add=True, db_index=True)
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -83,3 +97,10 @@ class Follow(models.Model):
             user=user
         ).exists()
         return (user != author and not following_exists)
+
+    class Meta:
+        ordering = ('-pub_date',)
+        verbose_name = 'Подписка'
+        verbose_name_plural = "Подписки"
+        UniqueConstraint(fields=['author', 'user'], name='unique_user')
+        CheckConstraint(name='not_same', check=~Q(follower=F('following')))
