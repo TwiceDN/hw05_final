@@ -32,12 +32,11 @@ def profile(request, username, following=False):
     posts = Post.objects.filter(author=author)
     template = 'posts/profile.html'
     following_button = False
-    if request.user.is_authenticated and request.user != author:
-        following = Follow.objects.filter(
+    following = request.user.is_authenticated and Follow.objects.filter(
             author=author,
             user=request.user
         ).exists()
-        following_button = True
+    following_button = True 
     context = {
         'page_obj': paginator_def(request, posts),
         'author': author,
@@ -130,7 +129,12 @@ def follow_index(request):
 @login_required
 def profile_follow(request, username):
     author = get_object_or_404(User, username=username)
-    if request.user != author:
+    following_exists = Follow.objects.filter(
+            author=author,
+            user=request.user
+        ).exists()
+    user_author = request.user != author
+    if user_author and (request.user != author and not following_exists):
         Follow.objects.create(
             user=request.user,
             author=author)

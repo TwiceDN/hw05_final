@@ -95,5 +95,5 @@ class Follow(models.Model):
         ordering = ('-pub_date',)
         verbose_name = 'Подписка'
         verbose_name_plural = "Подписки"
-        UniqueConstraint(fields=['author', 'user'], name='unique_user')
+        UniqueConstraint(fields=['author', 'user'], name='unique_follow')
         CheckConstraint(name='not_same', check=~Q(follower=F('following')))
