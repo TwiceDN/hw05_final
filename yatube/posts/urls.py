@@ -6,7 +6,8 @@ app_name = 'posts'
 
 
 urlpatterns = [
-     path('',
+     path(
+          '',
           views.index,
           name='index'),
 
