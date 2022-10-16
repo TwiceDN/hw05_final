@@ -54,7 +54,6 @@ class PostTests(TestCase):
             ),
         }
 
-
     def setUp(self):
         self.guest_client = Client()
         self.user = User.objects.create_user(username='test_user')
@@ -88,7 +87,7 @@ class PostTests(TestCase):
         except IndexError:
             print('context not found')
         post_text_0 = first_object.text
-        self.assertTrue(post_text_0, 'Тестовая запись для создания 2 поста')      
+        self.assertTrue(post_text_0, 'Тестовая запись для создания 2 поста')
 
     def test_new_post_show_correct_context(self):
         """Шаблон сформирован с правильным контекстом."""
@@ -242,9 +241,8 @@ class PaginatorViewsTest(TestCase):
             reverse(
                 "posts:group_list", kwargs={"slug": "test_slug2"}) + "?page=2":
                     "group",
-
         }
-        
+
     def test_second_page_contains_three_posts(self):
         for tested_url in self.list_urls.keys():
             response = self.client.get(tested_url)
