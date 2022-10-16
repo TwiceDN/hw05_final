@@ -1,7 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.db.models import F, Q
 from django.db.models import CheckConstraint, UniqueConstraint
+from django.db.models import F, Q
+
 
 User = get_user_model()
 
@@ -73,7 +74,7 @@ class Comment(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-pub_date']
+        ordering = ('-pub_date',)
         verbose_name = 'Комментарий'
         verbose_name_plural = "Комментарии"
 

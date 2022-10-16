@@ -1,11 +1,12 @@
 from django import forms
+from django.conf import settings
+from django.core.cache import cache
+from django.http import Http404
+from django.shortcuts import get_object_or_404
 from django.test import Client, TestCase
 from django.urls import reverse
-from django.shortcuts import get_object_or_404
-from django.http import Http404
-from django.core.cache import cache
 
-from posts.models import Group, Post, User, Comment, Follow
+from posts.models import Comment, Follow, Group, Post, User
 
 
 class PostTests(TestCase):
@@ -45,6 +46,14 @@ class PostTests(TestCase):
             'posts:profile_follow',
             None,
             {'username': cls.post.author.username})
+        cls.templates_page_names = {
+
+            'posts/create_post.html': reverse('posts:create'),
+            'posts/group_list.html': (
+                reverse('posts:group_list', kwargs={'slug': 'test_slug2'})
+            ),
+        }
+
 
     def setUp(self):
         self.guest_client = Client()
@@ -54,14 +63,7 @@ class PostTests(TestCase):
 
     def test_pages_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
-        templates_page_names = {
-
-            'posts/create_post.html': reverse('posts:create'),
-            'posts/group_list.html': (
-                reverse('posts:group_list', kwargs={'slug': 'test_slug2'})
-            ),
-        }
-        for template, reverse_name in templates_page_names.items():
+        for template, reverse_name in self.templates_page_names.items():
             with self.subTest(template=template):
                 response = self.authorized_client.get(reverse_name)
                 self.assertTemplateUsed(response, template)
@@ -81,9 +83,12 @@ class PostTests(TestCase):
         """Пост не попал в другую группу"""
         response = self.authorized_client.get(
             reverse('posts:group_list', kwargs={'slug': 'test_slug1'}))
-        first_object = response.context["page_obj"][0]
+        try:
+            first_object = response.context["page_obj"][0]
+        except IndexError:
+            print('context not found')
         post_text_0 = first_object.text
-        self.assertTrue(post_text_0, 'Тестовая запись для создания 2 поста')
+        self.assertTrue(post_text_0, 'Тестовая запись для создания 2 поста')      
 
     def test_new_post_show_correct_context(self):
         """Шаблон сформирован с правильным контекстом."""
@@ -100,7 +105,10 @@ class PostTests(TestCase):
         """Шаблон profile сформирован с правильным контекстом"""
         response = self.authorized_client.get(
             reverse('posts:profile', kwargs={'username': 'test_name2'}))
-        first_object = response.context["page_obj"][0]
+        try:
+            first_object = response.context["page_obj"][0]
+        except IndexError:
+            print('context not found')
         post_text_0 = first_object.text
         self.assertEqual(response.context['author'].username, 'test_name2')
         self.assertEqual(post_text_0, 'Тестовая запись для создания 2 поста')
@@ -215,7 +223,7 @@ class PaginatorViewsTest(TestCase):
             slug='test_slug2',
             description='Тестовое описание')
         cls.posts = []
-        for i in range(13):
+        for i in range(settings.NUMBER_POST+3):
             cls.posts.append(Post(
                 text=f'Тестовый пост {i}',
                 author=cls.author,
@@ -229,16 +237,16 @@ class PaginatorViewsTest(TestCase):
         self.user = User.objects.create_user(username='test_user')
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
-
-    def test_second_page_contains_three_posts(self):
-        list_urls = {
+        self.list_urls = {
             reverse("posts:index") + "?page=2": "posts:index",
             reverse(
                 "posts:group_list", kwargs={"slug": "test_slug2"}) + "?page=2":
                     "group",
 
         }
-        for tested_url in list_urls.keys():
+        
+    def test_second_page_contains_three_posts(self):
+        for tested_url in self.list_urls.keys():
             response = self.client.get(tested_url)
             self.assertEqual(
                 len(response.context.get('page_obj').object_list), 3)

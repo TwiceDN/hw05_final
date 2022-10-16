@@ -1,11 +1,11 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.core.paginator import Paginator
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.cache import cache_page
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.cache import cache_page
 
-from .models import Post, Group, Comment, Follow, User
-from .forms import PostForm, CommentForm
+from .models import Comment, Follow, Group, Post, User
+from .forms import CommentForm, PostForm
 from .utils import paginator_def
 
 
@@ -35,7 +35,8 @@ def profile(request, username, following=False):
     following = request.user.is_authenticated and Follow.objects.filter(
         author=author,
         user=request.user).exists()
-    following_button = True
+    if author != request.user:
+        following_button = True
     context = {
         'page_obj': paginator_def(request, posts),
         'author': author,

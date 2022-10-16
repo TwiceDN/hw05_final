@@ -1,8 +1,8 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 
-from posts.models import Group, Post, User
 from posts.forms import PostForm
+from posts.models import Group, Post, User
 
 
 class PostFormTests(TestCase):
