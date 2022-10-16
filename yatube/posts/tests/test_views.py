@@ -222,7 +222,7 @@ class PaginatorViewsTest(TestCase):
             slug='test_slug2',
             description='Тестовое описание')
         cls.posts = []
-        for i in range(settings.NUMBER_POST+3):
+        for i in range(settings.NUMBER_POST + 3):
             cls.posts.append(Post(
                 text=f'Тестовый пост {i}',
                 author=cls.author,
